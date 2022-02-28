@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log"
 	"strings"
+
+	"github.com/gokcelb/point-of-sale/pkg/publisher"
 )
 
 var (
@@ -20,24 +22,26 @@ type Repository interface {
 }
 
 type Service struct {
-	repo Repository
+	repository Repository
+	publisher  publisher.Publisher
 }
 
-func New(repo Repository) *Service {
-	return &Service{repo}
+func New(repo Repository, pub publisher.Publisher) *Service {
+	return &Service{repository: repo, publisher: pub}
 }
 
-func (s *Service) Item(id int) (Item, error) {
-	log.Println("entered Item method")
-	qty := s.repo.Stock(id)
+func (s *Service) UpdateItemStock(e publisher.StockEvent) {
+	log.Printf("new event received. event id: %s, item id: %d", e.ID, e.ItemID)
+
+	qty := s.repository.Stock(e.ItemID)
 	if qty < 1 {
-		log.Println("quantity below 0")
-		return Item{}, OutOfStockErr
+		log.Println("quantity below 1, quantity:", qty)
 	}
-	log.Println("quantity above 0")
+	log.Println("quantity:", qty)
 
-	s.repo.UpdateStock(id, qty-1)
-	return s.repo.Item(id), nil
+	s.repository.UpdateStock(e.ItemID, qty-1)
+	log.Println("updated stock:", s.repository.Stock(e.ItemID))
+	log.Println("stock updated successfully")
 }
 
 var keywords = map[string][]string{
@@ -81,7 +85,7 @@ func (s *Service) Catalogue() (map[string][]Item, error) {
 }
 
 func (s *Service) OrganizeItems() []Item {
-	itemsList := s.repo.Items()
+	itemsList := s.repository.Items()
 	log.Println("got items from repository", itemsList)
 
 	organizedItemsList := make([]Item, 20)

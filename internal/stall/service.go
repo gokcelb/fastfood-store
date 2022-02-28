@@ -1,20 +1,37 @@
 package stall
 
-import "github.com/gokcelb/point-of-sale/internal/inventory"
+import (
+	"log"
+
+	"github.com/gokcelb/point-of-sale/internal/inventory"
+	"github.com/gokcelb/point-of-sale/pkg/publisher"
+	"github.com/google/uuid"
+)
 
 type InventoryService interface {
-	Item(orderID int) (inventory.Item, error)
+	UpdateItemStock(e publisher.StockEvent)
 	Catalogue() (map[string][]inventory.Item, error)
 }
 
 type DefaultService struct {
-	invSvc InventoryService
+	inventoryService InventoryService
+	publisher        publisher.Publisher
 }
 
-func NewService(invSvc InventoryService) *DefaultService {
-	return &DefaultService{invSvc}
+func NewService(invSvc InventoryService, pub publisher.Publisher) *DefaultService {
+	return &DefaultService{inventoryService: invSvc, publisher: pub}
 }
 
 func (s *DefaultService) Catalogue() (map[string][]inventory.Item, error) {
-	return s.invSvc.Catalogue()
+	return s.inventoryService.Catalogue()
+}
+
+func (s *DefaultService) ProcessOrder(orderIDs []int) {
+	for _, orderID := range orderIDs {
+		s.publisher.Publish(publisher.StockEvent{
+			ID:     uuid.NewString(),
+			ItemID: orderID,
+		})
+		log.Println("published new event")
+	}
 }

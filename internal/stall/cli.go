@@ -10,7 +10,7 @@ import (
 
 type Service interface {
 	Catalogue() (map[string][]inventory.Item, error)
-	// ProcessOrder(orderNos []int)
+	ProcessOrder(orderNos []int)
 }
 
 type CLI struct {
@@ -41,9 +41,13 @@ func (s *CLI) TakeOrder() {
 		order    string
 		orderNos []int
 	)
-	for order != "q" {
+	for {
 		fmt.Println("Enter an item number:")
 		fmt.Scanln(&order)
+		if order == "q" {
+			break
+		}
+
 		orderNo, err := strconv.Atoi(order)
 		if err != nil {
 			fmt.Println("Please enter a valid number")
@@ -51,5 +55,5 @@ func (s *CLI) TakeOrder() {
 		}
 		orderNos = append(orderNos, orderNo)
 	}
-	// s.svc.ProcessOrder(orderNos)
+	s.svc.ProcessOrder(orderNos)
 }

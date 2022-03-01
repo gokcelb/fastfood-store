@@ -9,6 +9,7 @@ import (
 )
 
 type InventoryService interface {
+	SufficientStock(orderID int) bool
 	UpdateItemStock(e publisher.StockEvent)
 	Catalogue() (map[string][]inventory.Item, error)
 }
@@ -28,6 +29,10 @@ func (s *DefaultService) Catalogue() (map[string][]inventory.Item, error) {
 
 func (s *DefaultService) ProcessOrder(orderIDs []int) {
 	for _, orderID := range orderIDs {
+		if !s.inventoryService.SufficientStock(orderID) {
+			log.Println("skipped processing order for item id:", orderID)
+			continue
+		}
 		s.publisher.Publish(publisher.StockEvent{
 			ID:     uuid.NewString(),
 			ItemID: orderID,

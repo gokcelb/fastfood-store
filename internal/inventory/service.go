@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	OutOfStockErr       = errors.New("item is out of stock")
-	CategoryCreationErr = errors.New("category could not be created")
+	ErrOutOfStock       = errors.New("item is out of stock")
+	ErrCategoryCreation = errors.New("category could not be created")
 )
 
 type Repository interface {
@@ -23,11 +23,14 @@ type Repository interface {
 
 type Service struct {
 	repository Repository
-	publisher  publisher.Publisher
 }
 
-func New(repo Repository, pub publisher.Publisher) *Service {
-	return &Service{repository: repo, publisher: pub}
+func New(repo Repository) *Service {
+	return &Service{repository: repo}
+}
+
+func (s *Service) SufficientStock(id int) bool {
+	return s.repository.Stock(id) > 0
 }
 
 func (s *Service) UpdateItemStock(e publisher.StockEvent) {
@@ -76,7 +79,7 @@ func (s *Service) Catalogue() (map[string][]Item, error) {
 		log.Println("ran keywordCategory function, category: ", category)
 		if len(category) == 0 {
 			log.Println("category length 0")
-			return nil, CategoryCreationErr
+			return nil, ErrCategoryCreation
 		}
 		catalogue[category] = append(catalogue[category], item)
 	}

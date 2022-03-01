@@ -35,7 +35,7 @@ func (cli *CLI) GiveCatalogue() {
 	}
 }
 
-func (s *CLI) TakeOrder() {
+func (cli *CLI) TakeOrder() {
 	fmt.Println("Please enter the number of items that you would like to add to your order. Enter q to complete your order.")
 	var (
 		order    string
@@ -55,5 +55,5 @@ func (s *CLI) TakeOrder() {
 		}
 		orderNos = append(orderNos, orderNo)
 	}
-	s.svc.ProcessOrder(orderNos)
+	cli.svc.ProcessOrder(orderNos)
 }

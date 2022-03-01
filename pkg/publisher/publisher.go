@@ -1,11 +1,9 @@
 package publisher
 
-import "time"
-
 type Publisher interface {
 	Publish(e StockEvent)
 	Event() StockEvent
-	Listen(func(e StockEvent))
+	EventQueueEmpty() bool
 }
 
 func NewStockPublisher() Publisher {
@@ -30,11 +28,6 @@ func (sp *StockPublisher) Event() (event StockEvent) {
 	return
 }
 
-func (sp *StockPublisher) Listen(f func(e StockEvent)) {
-	for {
-		if len(sp.eventQueue) > 0 {
-			f(sp.Event())
-		}
-		time.Sleep(1 * time.Second)
-	}
+func (sp *StockPublisher) EventQueueEmpty() bool {
+	return len(sp.eventQueue) == 0
 }

@@ -6,20 +6,24 @@ import (
 	"github.com/gokcelb/point-of-sale/internal/inventory"
 	"github.com/gokcelb/point-of-sale/internal/stall"
 	"github.com/gokcelb/point-of-sale/pkg/publisher"
+	"github.com/gokcelb/point-of-sale/pkg/subscriber"
 )
 
 func main() {
-	p := publisher.NewStockPublisher()
+	pub := publisher.NewStockPublisher()
 
 	inventoryRepo := inventory.NewRepository()
-	inventorySvc := inventory.New(inventoryRepo, p)
-	go p.Listen(inventorySvc.UpdateItemStock)
+	inventorySvc := inventory.New(inventoryRepo)
 
-	stallSvc := stall.NewService(inventorySvc, p)
+	stallSvc := stall.NewService(inventorySvc, pub)
 	stallCLI := stall.New(stallSvc)
-	stallCLI.GiveCatalogue()
 
+	stallCLI.GiveCatalogue()
 	stallCLI.TakeOrder()
 
-	time.Sleep(10 * time.Second)
+	actions := subscriber.EventDrivenActions{inventorySvc.UpdateItemStock}
+	sub := subscriber.NewStockSubscriber(pub, actions)
+	go sub.Listen()
+
+	time.Sleep(1 * time.Second)
 }

@@ -1,33 +1,53 @@
 package publisher
 
-type Publisher interface {
-	Publish(e StockEvent)
-	Event() StockEvent
-	EventQueueEmpty() bool
-}
+type (
+	Publisher interface {
+		Publish(topicName string, event StockEvent)
+		EventQueue(topicName string) EventQueue
+	}
+
+	FastfoodStorePublisher struct {
+		topics []Topic
+	}
+
+	Topic struct {
+		name       string
+		eventQueue EventQueue
+	}
+
+	EventQueue []StockEvent
+
+	StockEvent struct {
+		ID     string
+		ItemID int
+	}
+)
 
 func NewStockPublisher() Publisher {
-	return &StockPublisher{[]StockEvent{}}
+	return &FastfoodStorePublisher{[]Topic{}}
 }
 
-type StockPublisher struct {
-	eventQueue []StockEvent
+func (fsp *FastfoodStorePublisher) EventQueue(topicName string) EventQueue {
+	return fsp.topic(topicName).eventQueue
 }
 
-type StockEvent struct {
-	ID     string
-	ItemID int
+func (fsp *FastfoodStorePublisher) topic(topicName string) *Topic {
+	for _, topic := range fsp.topics {
+		if topic.name == topicName {
+			return &topic
+		}
+	}
+	return newTopic(topicName)
 }
 
-func (sp *StockPublisher) Publish(event StockEvent) {
-	sp.eventQueue = append(sp.eventQueue, event)
+func newTopic(topicName string) *Topic {
+	return &Topic{
+		name:       topicName,
+		eventQueue: EventQueue{},
+	}
 }
 
-func (sp *StockPublisher) Event() (event StockEvent) {
-	event, sp.eventQueue = sp.eventQueue[0], sp.eventQueue[1:]
-	return
-}
-
-func (sp *StockPublisher) EventQueueEmpty() bool {
-	return len(sp.eventQueue) == 0
+func (fsp *FastfoodStorePublisher) Publish(topicName string, event StockEvent) {
+	eq := fsp.topic(topicName).eventQueue
+	eq = append(eq, event)
 }

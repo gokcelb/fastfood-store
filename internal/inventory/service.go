@@ -33,7 +33,11 @@ func (s *Service) SufficientStock(id int) bool {
 	return s.repository.Stock(id) > 0
 }
 
-func (s *Service) UpdateItemStock(e publisher.StockEvent) {
+func (s *Service) UpdateItemStock(ei interface{}) {
+	e, ok := ei.(publisher.StockEvent)
+	if !ok {
+		log.Fatal("not of stock type")
+	}
 	log.Printf("new event received. event id: %s, item id: %d", e.ID, e.ItemID)
 
 	qty := s.repository.Stock(e.ItemID)
@@ -44,7 +48,6 @@ func (s *Service) UpdateItemStock(e publisher.StockEvent) {
 
 	s.repository.UpdateStock(e.ItemID, qty-1)
 	log.Println("updated stock:", s.repository.Stock(e.ItemID))
-	log.Println("stock updated successfully")
 }
 
 var keywords = map[string][]string{

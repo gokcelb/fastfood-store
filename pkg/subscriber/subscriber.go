@@ -1,33 +1,38 @@
 package subscriber
 
 import (
-	"time"
+	"log"
 
 	"github.com/gokcelb/point-of-sale/pkg/publisher"
 )
 
-type Subscriber interface {
-	Listen()
+type (
+	Subscriber interface {
+		Listen(topicName string, action func(e interface{}))
+	}
+
+	FastfoodStoreSubscriber struct {
+		publisher publisher.Publisher
+	}
+)
+
+func New(pub publisher.Publisher) Subscriber {
+	return &FastfoodStoreSubscriber{pub}
 }
 
-func NewStockSubscriber(pub publisher.Publisher, act EventDrivenActions) Subscriber {
-	return &StockSubscriber{publisher: pub, actions: act}
-}
-
-type StockSubscriber struct {
-	publisher publisher.Publisher
-	actions   EventDrivenActions
-}
-
-type EventDrivenActions []func(e publisher.StockEvent)
-
-func (ss *StockSubscriber) Listen() {
+func (fss *FastfoodStoreSubscriber) Listen(topicName string, action func(e interface{})) {
+	c := make(chan int)
+	i := 0
 	for {
-		if !ss.publisher.EventQueueEmpty() {
-			for _, action := range ss.actions {
-				action(ss.publisher.Event())
-			}
+		eq := fss.publisher.Topic(topicName).EventQueue
+		log.Println("Listen method state of event queue:", eq)
+		for ; i < len(eq); i++ {
+			action(eq[i])
 		}
-		time.Sleep(10 * time.Millisecond)
+		go fss.publisher.ClearEventQueue(topicName, c)
+		select {
+		case i = <-c:
+			log.Println("received", i)
+		}
 	}
 }

@@ -21,9 +21,8 @@ func main() {
 	stallCLI.GiveCatalogue()
 	stallCLI.TakeOrder()
 
-	actions := subscriber.EventDrivenActions{inventorySvc.UpdateItemStock}
-	sub := subscriber.NewStockSubscriber(pub, actions)
-	go sub.Listen()
+	sub := subscriber.New(pub)
+	go sub.Listen("stock", inventorySvc.UpdateItemStock)
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(30 * time.Second)
 }

@@ -1,21 +1,25 @@
 package publisher
 
+import (
+	"log"
+	"time"
+)
+
 type (
 	Publisher interface {
-		Publish(topicName string, event StockEvent)
-		EventQueue(topicName string) EventQueue
+		Publish(topicName string, event interface{})
+		Topic(topicName string) *Topic
+		ClearEventQueue(topicName string, c chan int)
 	}
 
 	FastfoodStorePublisher struct {
-		topics []Topic
+		topics []*Topic
 	}
 
 	Topic struct {
-		name       string
-		eventQueue EventQueue
+		Name       string
+		EventQueue []interface{}
 	}
-
-	EventQueue []StockEvent
 
 	StockEvent struct {
 		ID     string
@@ -24,30 +28,35 @@ type (
 )
 
 func NewStockPublisher() Publisher {
-	return &FastfoodStorePublisher{[]Topic{}}
+	return &FastfoodStorePublisher{}
 }
 
-func (fsp *FastfoodStorePublisher) EventQueue(topicName string) EventQueue {
-	return fsp.topic(topicName).eventQueue
-}
-
-func (fsp *FastfoodStorePublisher) topic(topicName string) *Topic {
-	for _, topic := range fsp.topics {
-		if topic.name == topicName {
-			return &topic
+func (fsp *FastfoodStorePublisher) Topic(topicName string) *Topic {
+	for _, Topic := range fsp.topics {
+		if Topic.Name == topicName {
+			log.Printf("Topic already exists, topic name: %s, eq: %v", Topic.Name, Topic.EventQueue)
+			return Topic
 		}
 	}
-	return newTopic(topicName)
+	log.Println("new Topic created")
+	return fsp.newTopic(topicName)
 }
 
-func newTopic(topicName string) *Topic {
-	return &Topic{
-		name:       topicName,
-		eventQueue: EventQueue{},
+func (fsp *FastfoodStorePublisher) newTopic(topicName string) *Topic {
+	newTopic := &Topic{
+		Name: topicName,
 	}
+	fsp.topics = append(fsp.topics, newTopic)
+	return newTopic
 }
 
-func (fsp *FastfoodStorePublisher) Publish(topicName string, event StockEvent) {
-	eq := fsp.topic(topicName).eventQueue
-	eq = append(eq, event)
+func (fsp *FastfoodStorePublisher) Publish(topicName string, event interface{}) {
+	fsp.Topic(topicName).EventQueue = append(fsp.Topic(topicName).EventQueue, event)
+}
+
+func (fsp *FastfoodStorePublisher) ClearEventQueue(topicName string, c chan int) {
+	time.Sleep(20 * time.Second)
+	fsp.Topic(topicName).EventQueue = make([]interface{}, 0)
+	log.Println("event queue cleared: eq", fsp.Topic(topicName).EventQueue)
+	c <- 0
 }

@@ -25,7 +25,7 @@ func (fss *FastfoodStoreSubscriber) Listen(topicName string, action func(e inter
 	i := 0
 	for {
 		eq := fss.publisher.Topic(topicName).EventQueue
-		log.Println("Listen method state of event queue:", eq)
+		log.Printf("Listen method running: state of event queue: %v", eq)
 		for ; i < len(eq); i++ {
 			action(eq[i])
 		}

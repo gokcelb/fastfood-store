@@ -38,16 +38,12 @@ func (s *Service) UpdateItemStock(ei interface{}) {
 	if !ok {
 		log.Fatal("not of stock type")
 	}
-	log.Printf("new event received. event id: %s, item id: %d", e.ID, e.ItemID)
+	log.Printf("new event received for UpdateItemStock function, event id: %s, item id: %d", e.ID, e.ItemID)
 
 	qty := s.repository.Stock(e.ItemID)
-	if qty < 1 {
-		log.Println("quantity below 1, quantity:", qty)
-	}
-	log.Println("quantity:", qty)
 
 	s.repository.UpdateStock(e.ItemID, qty-1)
-	log.Println("updated stock:", s.repository.Stock(e.ItemID))
+	log.Printf("updated stock: %d, old stock: %d", s.repository.Stock(e.ItemID), qty)
 }
 
 var keywords = map[string][]string{
@@ -68,31 +64,26 @@ func keywordCategory(name string) string {
 }
 
 func (s *Service) Catalogue() (map[string][]Item, error) {
-	log.Println("entered Catalogue method")
 	catalogue := map[string][]Item{
 		"Burgers": {},
 		"Sides":   {},
 		"Drinks":  {},
 	}
 	items := s.OrganizeItems()
-	log.Println("organized items")
 
 	for _, item := range items {
 		category := keywordCategory(item.Name)
-		log.Println("ran keywordCategory function, category: ", category)
 		if len(category) == 0 {
 			log.Println("category length 0")
 			return nil, ErrCategoryCreation
 		}
 		catalogue[category] = append(catalogue[category], item)
 	}
-	log.Println("done looping through items", catalogue)
 	return catalogue, nil
 }
 
 func (s *Service) OrganizeItems() []Item {
 	itemsList := s.repository.Items()
-	log.Println("got items from repository", itemsList)
 
 	organizedItemsList := make([]Item, 20)
 	for _, item := range itemsList {

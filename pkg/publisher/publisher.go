@@ -34,7 +34,6 @@ func NewStockPublisher() Publisher {
 func (fsp *FastfoodStorePublisher) Topic(topicName string) *Topic {
 	for _, Topic := range fsp.topics {
 		if Topic.Name == topicName {
-			log.Printf("Topic already exists, topic name: %s, eq: %v", Topic.Name, Topic.EventQueue)
 			return Topic
 		}
 	}

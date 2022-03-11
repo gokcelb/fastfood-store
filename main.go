@@ -14,10 +14,10 @@ func main() {
 	pub := publisher.NewStockPublisher()
 
 	inventoryRepo := inventory.NewRepository()
-	inventorySvc := inventory.New(inventoryRepo)
+	inventorySvc := inventory.NewService(inventoryRepo)
 
 	stallSvc := stall.NewService(inventorySvc, pub)
-	stallCLI := stall.New(stallSvc)
+	stallCLI := stall.NewCLI(stallSvc)
 
 	stallCLI.GiveCatalogue()
 	stallCLI.TakeOrder()

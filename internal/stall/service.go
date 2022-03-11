@@ -12,7 +12,7 @@ type (
 	InventoryService interface {
 		SufficientStock(orderID int) bool
 		UpdateItemStock(e interface{})
-		Catalogue() (map[string][]inventory.Item, error)
+		OrganizedItems() []inventory.Item
 	}
 
 	DefaultService struct {
@@ -25,8 +25,8 @@ func NewService(invSvc InventoryService, pub publisher.Publisher) *DefaultServic
 	return &DefaultService{inventoryService: invSvc, publisher: pub}
 }
 
-func (s *DefaultService) Catalogue() (map[string][]inventory.Item, error) {
-	return s.inventoryService.Catalogue()
+func (s *DefaultService) OrganizedItems() []inventory.Item {
+	return s.inventoryService.OrganizedItems()
 }
 
 func (s *DefaultService) ProcessOrder(orderIDs []int) {

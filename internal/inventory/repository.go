@@ -31,10 +31,6 @@ func NewRepository() MemDB {
 	}
 }
 
-func (db MemDB) NumberOfItems() int {
-	return len(db)
-}
-
 func (db MemDB) Stock(id int) int {
 	return db[id].Quantity
 }

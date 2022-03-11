@@ -3,7 +3,6 @@ package inventory
 import (
 	"errors"
 	"log"
-	"strings"
 
 	"github.com/gokcelb/point-of-sale/pkg/publisher"
 )
@@ -14,7 +13,6 @@ var (
 )
 
 type Repository interface {
-	NumberOfItems() int
 	Stock(id int) int
 	UpdateStock(id int, newQuantity int)
 	Item(id int) Item
@@ -25,7 +23,7 @@ type Service struct {
 	repository Repository
 }
 
-func New(repo Repository) *Service {
+func NewService(repo Repository) *Service {
 	return &Service{repository: repo}
 }
 
@@ -46,43 +44,7 @@ func (s *Service) UpdateItemStock(ei interface{}) {
 	log.Printf("updated stock: %d, old stock: %d", s.repository.Stock(e.ItemID), qty)
 }
 
-var keywords = map[string][]string{
-	"Burgers": {"burger"},
-	"Sides":   {"fries", "salad"},
-	"Drinks":  {"coke", "ale", "milk"},
-}
-
-func keywordCategory(name string) string {
-	for cat, keywords := range keywords {
-		for _, keyword := range keywords {
-			if strings.Contains(strings.ToLower(name), keyword) {
-				return cat
-			}
-		}
-	}
-	return ""
-}
-
-func (s *Service) Catalogue() (map[string][]Item, error) {
-	catalogue := map[string][]Item{
-		"Burgers": {},
-		"Sides":   {},
-		"Drinks":  {},
-	}
-	items := s.OrganizeItems()
-
-	for _, item := range items {
-		category := keywordCategory(item.Name)
-		if len(category) == 0 {
-			log.Println("category length 0")
-			return nil, ErrCategoryCreation
-		}
-		catalogue[category] = append(catalogue[category], item)
-	}
-	return catalogue, nil
-}
-
-func (s *Service) OrganizeItems() []Item {
+func (s *Service) OrganizedItems() []Item {
 	itemsList := s.repository.Items()
 
 	organizedItemsList := make([]Item, 20)

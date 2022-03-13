@@ -1,6 +1,7 @@
 package pos
 
 import (
+	"log"
 	"sort"
 
 	"github.com/gokcelb/point-of-sale/internal/inventory"
@@ -8,8 +9,18 @@ import (
 
 type PointOfSale struct{}
 
-func (*PointOfSale) ComboPrices(burgerCombos [][]inventory.Item) []float64 {
-	comboPrices := make([]float64, len(burgerCombos))
+func NewService() *PointOfSale {
+	return &PointOfSale{}
+}
+
+func (*PointOfSale) NonComboPrices(nonCombos []inventory.Item) (nonComboPrices []float64) {
+	for _, item := range nonCombos {
+		nonComboPrices = append(nonComboPrices, item.Price)
+	}
+	return
+}
+
+func (*PointOfSale) ComboPrices(burgerCombos [][]inventory.Item) (comboPrices []float64) {
 	for _, combo := range burgerCombos {
 		var comboPrice float64
 		for _, item := range combo {
@@ -18,10 +29,10 @@ func (*PointOfSale) ComboPrices(burgerCombos [][]inventory.Item) []float64 {
 		discountedComboPrice := comboPrice - comboPrice*15/100
 		comboPrices = append(comboPrices, discountedComboPrice)
 	}
-	return comboPrices
+	return
 }
 
-func (pos *PointOfSale) Combos(orderedItems []inventory.Item) (burgerCombos [][]inventory.Item) {
+func (pos *PointOfSale) CombosAndNonCombos(orderedItems []inventory.Item) ([][]inventory.Item, []inventory.Item) {
 	var (
 		burgers []inventory.Item
 		sides   []inventory.Item
@@ -39,19 +50,42 @@ func (pos *PointOfSale) Combos(orderedItems []inventory.Item) (burgerCombos [][]
 	}
 
 	if len(burgers) == 0 || len(sides) == 0 || len(drinks) == 0 {
-		return nil
+		log.Println("no combos found")
+		return nil, orderedItems
 	}
 
-	pos.sortItemsByPrice(burgers)
-	pos.sortItemsByPrice(sides)
-	pos.sortItemsByPrice(drinks)
+	var burgerCombos [][]inventory.Item
+	for _, category := range [][]inventory.Item{burgers, sides, drinks} {
+		pos.sortItemsByPrice(category)
+	}
 
 	shortest := pos.findShortestLength([][]inventory.Item{burgers, sides, drinks}, len(burgers))
-
 	for i := 0; i < shortest; i++ {
 		burgerCombos = append(burgerCombos, []inventory.Item{burgers[i], sides[i], drinks[i]})
 	}
-	return burgerCombos
+
+	var nonCombos []inventory.Item
+	for _, category := range [][]inventory.Item{burgers, sides, drinks} {
+		for _, item := range category {
+			if pos.itemIsCombo(item, burgerCombos) {
+				continue
+			}
+			nonCombos = append(nonCombos, item)
+		}
+	}
+
+	return burgerCombos, nonCombos
+}
+
+func (*PointOfSale) itemIsCombo(item inventory.Item, combos [][]inventory.Item) bool {
+	for _, combo := range combos {
+		for _, comboItem := range combo {
+			if item.ID == comboItem.ID {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (*PointOfSale) findShortestLength(a [][]inventory.Item, presumedShortest int) int {

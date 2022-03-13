@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gokcelb/point-of-sale/internal/inventory"
+	"github.com/gokcelb/point-of-sale/internal/pos"
 	"github.com/gokcelb/point-of-sale/internal/stall"
 	"github.com/gokcelb/point-of-sale/pkg/publisher"
 	"github.com/gokcelb/point-of-sale/pkg/subscriber"
@@ -16,7 +17,9 @@ func main() {
 	inventoryRepo := inventory.NewRepository()
 	inventorySvc := inventory.NewService(inventoryRepo)
 
-	stallSvc := stall.NewService(inventorySvc, pub)
+	pointOfSaleSvc := pos.NewService()
+
+	stallSvc := stall.NewService(inventorySvc, pub, pointOfSaleSvc)
 	stallCLI := stall.NewCLI(stallSvc)
 
 	stallCLI.GiveCatalogue()

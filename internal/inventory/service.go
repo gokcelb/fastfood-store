@@ -31,6 +31,10 @@ func (s *Service) SufficientStock(id int) bool {
 	return s.repository.Stock(id) > 0
 }
 
+func (s *Service) Item(id int) Item {
+	return s.repository.Item(id)
+}
+
 func (s *Service) UpdateItemStock(ei interface{}) {
 	e, ok := ei.(publisher.StockEvent)
 	if !ok {

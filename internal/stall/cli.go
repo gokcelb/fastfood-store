@@ -2,6 +2,7 @@ package stall
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -10,7 +11,8 @@ import (
 
 type Service interface {
 	OrganizedItems() []inventory.Item
-	ProcessOrder(orderNos []int)
+	ProcessOrderStocks(orderNos []int)
+	ProcessOrders(orderNos []int) (combosWPrices, nonCombosWPrices map[int]map[string]interface{})
 }
 
 type CLI struct {
@@ -22,27 +24,15 @@ func NewCLI(service Service) *CLI {
 }
 
 func (cli *CLI) GiveCatalogue() {
-	categories := []string{"Burgers", "Sides", "Drinks"}
-	var categoryStart bool
-	// avoid initializing with zero value because
-	// it disrupts if logic for burger category
-	var categoriesIdx int = -1
-
+	var (
+		currCategory  string
+		categoryStart bool
+	)
 	for _, item := range cli.svc.OrganizedItems() {
-		name := strings.ToLower(item.Name)
-		if strings.Contains(name, "burger") {
-			categoryStart = categoriesIdx != 0
-			categoriesIdx = 0
-		} else if strings.Contains(name, "fries") || strings.Contains(name, "salad") {
-			categoryStart = categoriesIdx != 1
-			categoriesIdx = 1
-		} else {
-			categoryStart = categoriesIdx != 2
-			categoriesIdx = 2
-		}
-
+		categoryStart = currCategory != item.Category
 		if categoryStart {
-			fmt.Printf("\n----------%s----------\n", categories[categoriesIdx])
+			fmt.Printf("\n----------%s----------\n", strings.ToUpper(item.Category))
+			currCategory = item.Category
 		}
 		fmt.Println(item.ID, item.Name, item.Price)
 	}
@@ -58,6 +48,7 @@ func (cli *CLI) TakeOrder() {
 		fmt.Println("\nEnter an item number:")
 		fmt.Scanln(&order)
 		if order == "q" {
+			fmt.Println("\nPlacing order...")
 			break
 		}
 
@@ -68,5 +59,37 @@ func (cli *CLI) TakeOrder() {
 		}
 		orderNos = append(orderNos, orderNo)
 	}
-	cli.svc.ProcessOrder(orderNos)
+	cli.svc.ProcessOrderStocks(orderNos)
+	combosWPrices, nonCombosWPrices := cli.svc.ProcessOrders(orderNos)
+	cli.giveBill(combosWPrices, nonCombosWPrices)
+}
+
+func (cli *CLI) giveBill(combosWPrices, nonCombosWPrices map[int]map[string]interface{}) {
+	var combo []inventory.Item
+	var comboPrice float64
+	for _, val := range combosWPrices {
+		if v, ok := val["combo"].([]inventory.Item); ok {
+			combo = v
+		}
+		if v, ok := val["price"].(float64); ok {
+			comboPrice = v
+		}
+		fmt.Printf("\n\n%f Burger Combo\n", comboPrice)
+		for _, item := range combo {
+			fmt.Printf("%s\n\n", item.Name)
+		}
+	}
+
+	var nonCombo inventory.Item
+	var nonComboPrice float64
+	log.Println("noncomboswithprices", nonCombosWPrices)
+	for _, val := range nonCombosWPrices {
+		if v, ok := val["item"].(inventory.Item); ok {
+			nonCombo = v
+		}
+		if v, ok := val["price"].(float64); ok {
+			nonComboPrice = v
+		}
+		fmt.Printf("\n\n%s %f\n\n", nonCombo.Name, nonComboPrice)
+	}
 }

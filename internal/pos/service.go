@@ -107,6 +107,6 @@ func (*PointOfSale) findShortestLength(a [][]inventory.Item, presumedShortest in
 
 func (*PointOfSale) sortItemsByPrice(a []inventory.Item) {
 	sort.Slice(a, func(i, j int) bool {
-		return a[i].Price < a[j].Price
+		return a[i].Price > a[j].Price
 	})
 }

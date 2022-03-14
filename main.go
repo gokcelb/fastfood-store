@@ -34,9 +34,8 @@ func main() {
 
 // see if two actions can listen to same events of same topic
 func printEventReceived(ie interface{}) {
-	e, ok := ie.(publisher.StockEvent)
+	_, ok := ie.(publisher.StockEvent)
 	if !ok {
 		log.Fatal("not of stock type")
 	}
-	log.Printf("new stock event received for printEventReceived function, event id: %s, item id: %d", e.ID, e.ItemID)
 }

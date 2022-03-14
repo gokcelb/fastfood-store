@@ -1,8 +1,6 @@
 package stall
 
 import (
-	"log"
-
 	"github.com/gokcelb/point-of-sale/internal/inventory"
 	"github.com/gokcelb/point-of-sale/pkg/publisher"
 	"github.com/google/uuid"
@@ -41,14 +39,12 @@ func (s *DefaultService) OrganizedItems() []inventory.Item {
 func (s *DefaultService) ProcessOrderStocks(orderIDs []int) {
 	for _, orderID := range orderIDs {
 		if !s.inventoryService.SufficientStock(orderID) {
-			log.Println("skipped processing order for item id:", orderID)
 			continue
 		}
 		s.publisher.Publish("stock", publisher.StockEvent{
 			ID:     uuid.NewString(),
 			ItemID: orderID,
 		})
-		log.Println("published new stock event")
 	}
 }
 
@@ -56,10 +52,8 @@ type nested map[int]map[string]interface{}
 
 func (n nested) structure(orders interface{}, orderPrices []float64) {
 	if v, ok := orders.([][]inventory.Item); ok {
-		log.Println("type combos -> structure combos")
 		n.structureCombos(v, orderPrices)
 	} else if v, ok := orders.([]inventory.Item); ok {
-		log.Println("type items -> structure non combos")
 		n.structureNonCombos(v, orderPrices)
 	}
 }
@@ -70,7 +64,6 @@ func (n nested) structureCombos(v [][]inventory.Item, p []float64) {
 		n[i]["combo"] = v[i]
 		n[i]["price"] = p[i]
 	}
-	log.Println("structure combos", n)
 }
 
 func (n nested) structureNonCombos(v []inventory.Item, p []float64) {
@@ -79,7 +72,6 @@ func (n nested) structureNonCombos(v []inventory.Item, p []float64) {
 		n[i]["item"] = v[i]
 		n[i]["price"] = p[i]
 	}
-	log.Println("structure non combos", n)
 }
 
 func (s *DefaultService) ProcessOrders(orderIDs []int) (nested, nested) {
@@ -95,16 +87,13 @@ func (s *DefaultService) ProcessOrders(orderIDs []int) (nested, nested) {
 
 	nonCombosWithPrices := make(nested)
 	nonCombosWithPrices.structure(nonCombos, nonComboPrices)
-	log.Println(nonCombosWithPrices)
 
 	if combos == nil {
-		log.Println("combos nil")
 		return nil, nonCombosWithPrices
 	}
 
 	combosWithPrices := make(nested)
 	combosWithPrices.structure(combos, comboPrices)
-	log.Println(combosWithPrices)
 
 	return combosWithPrices, nonCombosWithPrices
 }

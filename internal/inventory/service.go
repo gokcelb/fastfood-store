@@ -40,12 +40,10 @@ func (s *Service) UpdateItemStock(ei interface{}) {
 	if !ok {
 		log.Fatal("not of stock type")
 	}
-	log.Printf("new event received for UpdateItemStock function, event id: %s, item id: %d", e.ID, e.ItemID)
 
 	qty := s.repository.Stock(e.ItemID)
 
 	s.repository.UpdateStock(e.ItemID, qty-1)
-	log.Printf("updated stock: %d, old stock: %d", s.repository.Stock(e.ItemID), qty)
 }
 
 func (s *Service) OrganizedItems() []Item {

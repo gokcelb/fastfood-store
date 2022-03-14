@@ -1,7 +1,6 @@
 package publisher
 
 import (
-	"log"
 	"time"
 )
 
@@ -37,7 +36,6 @@ func (fsp *FastfoodStorePublisher) Topic(topicName string) *Topic {
 			return Topic
 		}
 	}
-	log.Println("new Topic created")
 	return fsp.newTopic(topicName)
 }
 
@@ -56,6 +54,5 @@ func (fsp *FastfoodStorePublisher) Publish(topicName string, event interface{}) 
 func (fsp *FastfoodStorePublisher) ClearEventQueue(topicName string, c chan int) {
 	time.Sleep(20 * time.Second)
 	fsp.Topic(topicName).EventQueue = make([]interface{}, 0)
-	log.Println("event queue cleared: eq", fsp.Topic(topicName).EventQueue)
 	c <- 0
 }

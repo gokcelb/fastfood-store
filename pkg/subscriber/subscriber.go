@@ -1,8 +1,6 @@
 package subscriber
 
 import (
-	"log"
-
 	"github.com/gokcelb/point-of-sale/pkg/publisher"
 )
 
@@ -25,14 +23,12 @@ func (fss *FastfoodStoreSubscriber) Listen(topicName string, action func(e inter
 	i := 0
 	for {
 		eq := fss.publisher.Topic(topicName).EventQueue
-		log.Printf("Listen method running: state of event queue: %v", eq)
 		for ; i < len(eq); i++ {
 			action(eq[i])
 		}
 		go fss.publisher.ClearEventQueue(topicName, c)
 		select {
 		case i = <-c:
-			log.Println("received", i)
 		}
 	}
 }

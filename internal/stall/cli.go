@@ -2,7 +2,6 @@ package stall
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -12,7 +11,8 @@ import (
 type Service interface {
 	OrganizedItems() []inventory.Item
 	ProcessOrderStocks(orderNos []int)
-	ProcessOrders(orderNos []int) (combosWPrices, nonCombosWPrices map[int]map[string]interface{})
+	ProcessOrders(orderNos []int) (combosWPrices, nonCombosWPrices nested)
+	TotalPrice() float64
 }
 
 type CLI struct {
@@ -64,32 +64,34 @@ func (cli *CLI) TakeOrder() {
 	cli.giveBill(combosWPrices, nonCombosWPrices)
 }
 
-func (cli *CLI) giveBill(combosWPrices, nonCombosWPrices map[int]map[string]interface{}) {
+func (cli *CLI) giveBill(combosWithPrices, nonCombosWithPrices nested) {
 	var combo []inventory.Item
 	var comboPrice float64
-	for _, val := range combosWPrices {
+	for _, val := range combosWithPrices {
 		if v, ok := val["combo"].([]inventory.Item); ok {
 			combo = v
 		}
 		if v, ok := val["price"].(float64); ok {
 			comboPrice = v
 		}
-		fmt.Printf("\n\n%f Burger Combo\n", comboPrice)
+		fmt.Printf("\n$%0.2f Burger Combo\n", comboPrice)
 		for _, item := range combo {
-			fmt.Printf("%s\n\n", item.Name)
+			fmt.Printf("%s\n", item.Name)
 		}
 	}
 
+	fmt.Println("\nNon combos")
 	var nonCombo inventory.Item
 	var nonComboPrice float64
-	log.Println("noncomboswithprices", nonCombosWPrices)
-	for _, val := range nonCombosWPrices {
+	for _, val := range nonCombosWithPrices {
 		if v, ok := val["item"].(inventory.Item); ok {
 			nonCombo = v
 		}
 		if v, ok := val["price"].(float64); ok {
 			nonComboPrice = v
 		}
-		fmt.Printf("\n\n%s %f\n\n", nonCombo.Name, nonComboPrice)
+		fmt.Printf("%s $%0.2f\n", nonCombo.Name, nonComboPrice)
 	}
+
+	fmt.Printf("Total: $%0.2f\n", cli.svc.TotalPrice())
 }

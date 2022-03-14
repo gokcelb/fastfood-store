@@ -62,6 +62,15 @@ func (cli *CLI) TakeOrder() {
 	cli.svc.ProcessOrderStocks(orderNos)
 	combosWPrices, nonCombosWPrices := cli.svc.ProcessOrders(orderNos)
 	cli.giveBill(combosWPrices, nonCombosWPrices)
+
+	fmt.Println("Would you like to continue ordering? Type yes or no.")
+	var answer string
+	fmt.Scanln(&answer)
+	if strings.ToLower(answer) == "no" {
+		cli.validateOrder()
+	} else if strings.ToLower(answer) == "yes" {
+		cli.TakeOrder()
+	}
 }
 
 func (cli *CLI) giveBill(combosWithPrices, nonCombosWithPrices nested) {
@@ -93,5 +102,16 @@ func (cli *CLI) giveBill(combosWithPrices, nonCombosWithPrices nested) {
 		fmt.Printf("%s $%0.2f\n", nonCombo.Name, nonComboPrice)
 	}
 
-	fmt.Printf("Total: $%0.2f\n", cli.svc.TotalPrice())
+	fmt.Printf("\nTotal: $%0.2f\n", cli.svc.TotalPrice())
+}
+
+func (cli *CLI) validateOrder() {
+	fmt.Println("Would you like to finish ordering and pay for your order? Type yes or no.")
+	var answer string
+	fmt.Scanln(&answer)
+	if answer == "no" {
+		fmt.Println("No worries! Another time.")
+	} else if answer == "yes" {
+		fmt.Printf("That'll be $%0.2f. Come again!", cli.svc.TotalPrice())
+	}
 }

@@ -7,20 +7,27 @@ import (
 	"github.com/gokcelb/point-of-sale/internal/inventory"
 )
 
-type PointOfSale struct{}
-
-func NewService() *PointOfSale {
-	return &PointOfSale{}
+type PointOfSale struct {
+	total float64
 }
 
-func (*PointOfSale) NonComboPrices(nonCombos []inventory.Item) (nonComboPrices []float64) {
+func NewService() *PointOfSale {
+	return &PointOfSale{total: 0}
+}
+
+func (pos *PointOfSale) TotalPrice() float64 {
+	return pos.total
+}
+
+func (pos *PointOfSale) NonComboPrices(nonCombos []inventory.Item) (nonComboPrices []float64) {
 	for _, item := range nonCombos {
 		nonComboPrices = append(nonComboPrices, item.Price)
+		pos.total += item.Price
 	}
 	return
 }
 
-func (*PointOfSale) ComboPrices(burgerCombos [][]inventory.Item) (comboPrices []float64) {
+func (pos *PointOfSale) ComboPrices(burgerCombos [][]inventory.Item) (comboPrices []float64) {
 	for _, combo := range burgerCombos {
 		var comboPrice float64
 		for _, item := range combo {
@@ -28,6 +35,7 @@ func (*PointOfSale) ComboPrices(burgerCombos [][]inventory.Item) (comboPrices []
 		}
 		discountedComboPrice := comboPrice - comboPrice*15/100
 		comboPrices = append(comboPrices, discountedComboPrice)
+		pos.total += discountedComboPrice
 	}
 	return
 }
